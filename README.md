@@ -1,117 +1,136 @@
-<p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
-</p>
+![CD Workflow](https://github.com/blackboard-innersource/gh-action-version-cat/workflows/CD%20Workflow/badge.svg?event=push)
 
-# Create a JavaScript Action using TypeScript
+# GitHub Action: Version :smile_cat:
 
-Use this template to bootstrap the creation of a JavaScript action.:rocket:
+This action just reads a file from your repository to get the next release version.
+It will also verify that the git tag does not already exist. If the tags does exist,
+it will fail the step.
 
-This template includes compilication support, tests, a validation workflow, publishing, and versioning guidance.  
+BUT WHY!?! To facilitate a very simple continuous delivery workflow. Every pull request
+should modify the file to set the expected release after merge. If you forget, this
+action will remind you to modify the file. This is a very simple and non-magical
+way to manage auto-tagging that is reviewable as part of the pull request.
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+This workflow may not be the best for a very busy repository that often has many
+pull requests open at a time due to merge conflicts.
 
-## Create an action from this template
+What's with the weird name? This started out as simple `bash` that was mostly
+just `VERSION=v$(cat VERSION)` and naming things is hard.  The more you know :stars:
 
-Click the `Use this Template` and provide the new repo details for your action
+## Usage
 
-## Code in Master
+For all possible inputs and outputs see the [Action YAML](action.yml) file.
 
-Install the dependencies  
+### Usage: basic
+
+Add a `VERSION` file in your repository. Add the following contents to the `VERSION` file
+(or whatever version you want to use):
+
+```
+1.0.0
+```
+
+If there are trailing newlines, that is OK.  Then you can invoke this action
+in your workflow like this:
+
+```yaml
+steps:
+  - name: Version
+    id: version
+    uses: blackboard-innersource/gh-action-version-cat@v1
+```
+
+Not very exciting. Combine it with [create-release action](https://github.com/actions/create-release),
+then you have continuous delivery:
+
+```yaml
+steps:
+  - name: Version
+    id: version
+    uses: blackboard-innersource/gh-action-version-cat@v1
+
+  - name: Create Release ${{ steps.version.outputs.version }}
+    if: github.event_name == 'push'
+    uses: actions/create-release@v1
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    with:
+      tag_name: ${{ steps.version.outputs.version }}
+      release_name: ${{ steps.version.outputs.version }}
+```
+
+The above would create a tag and GitHub release named `v1.0.0`.
+
+### Usage: workflow
+
+Here is a full working example.
+
+* For pull requests, all the steps will run except for the `Create Release` step.
+  The `Version` step will validate the `VERSION` file and fail the build if the
+  git tag already exists.
+* For updates to master, all steps will run and, if successful, release a new version.
+
+```yaml
+name: CD Workflow
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  cd:
+    name: Validate and Release
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Test
+        run: |
+          # Your tests!
+
+      - name: Version
+        id: version
+        uses: blackboard-innersource/gh-action-version-cat@v1
+
+      - name: Create Release ${{ steps.version.outputs.version }}
+        if: github.event_name == 'push'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: ${{ steps.version.outputs.version }}
+``` 
+
+## Developing
+
+Install the dependencies:
 ```bash
 $ npm install
 ```
 
-Build the typescript
+Build the typescript:
 ```bash
 $ npm run build
 ```
 
-Run the tests :heavy_check_mark:  
+Run the tests:  
 ```bash
 $ npm test
-
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
-
-...
 ```
 
-## Change action.yml
-
-The action.yml contains defines the inputs and output for your action.
-
-Update the action.yml with your name, description, inputs and outputs for your action.
-
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-import * as core from '@actions/core';
-...
-
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-run()
-```
-
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos.  We will create a releases branch and only checkin production modules (core in this case). 
-
-Comment out node_modules in .gitignore and create a releases/v1 branch
+Update the distribution (required for releasing and testing workflow):
 ```bash
-# comment out in distribution branches
-# node_modules/
+$ npm run build && npm run pack
+$ git commit -a dist/index.js -m "Update dist"
 ```
 
-```bash
-$ git checkout -b releases/v1
-$ git commit -a -m "prod dependencies"
-```
+## License
 
-```bash
-$ npm prune --production
-$ git add node_modules
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
-
-Your action is now published! :rocket: 
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Validate
-
-You can now validate the action by referencing the releases/v1 branch
-
-```yaml
-uses: actions/typescript-action@releases/v1
-with:
-  milliseconds: 1000
-```
-
-See the [actions tab](https://github.com/actions/javascript-action/actions) for runs of this action! :rocket:
-
-## Usage:
-
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and tested action
-
-```yaml
-uses: actions/typescript-action@v1
-with:
-  milliseconds: 1000
-```
+Please see the [LICENSE](LICENSE) file.

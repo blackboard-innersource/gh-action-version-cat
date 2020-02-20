@@ -1,18 +1,26 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import {getVersion, gitTagExists, fail} from './version'
+import * as path from 'path'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`)
+    const file = core.getInput('file', {required: true})
+    const prepend = core.getInput('prepend')
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
+    const cwd = process.env.GITHUB_WORKSPACE || process.cwd()
+    const filePath = path.join(cwd, file)
 
-    core.setOutput('time', new Date().toTimeString())
+    const version = await getVersion(filePath, prepend)
+    core.info(`✅ found ${version} from ${file} file`)
+
+    if (await gitTagExists(version)) {
+      return fail(version, file)
+    }
+
+    core.info(`✅ git tag ${version} is available`)
+    core.setOutput('version', version)
   } catch (error) {
-    core.setFailed(error.message)
+    core.setFailed(`🔥 ${error.message}`)
   }
 }
 

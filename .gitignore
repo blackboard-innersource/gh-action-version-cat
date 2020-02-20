@@ -1,3 +1,6 @@
+__tests__/remote
+__tests__/local
+
 # Dependency directory
 node_modules
 

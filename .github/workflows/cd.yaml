@@ -1,0 +1,54 @@
+name: CD Workflow
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Integration test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        with:
+          file: __tests__/version.txt
+          prepend: test
+
+  cd:
+    name: Validate and Release
+    runs-on: ubuntu-18.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Test
+        run: |
+          npm install
+          npm run all
+
+      - name: Verify no changes
+        run: |
+          if ! git diff --quiet; then
+            git status --short
+            echo "::error::There should be no dirty files, likely need to run 'npm run build && npm run pack' to update the dist"
+            exit 1
+          fi
+
+      - name: Version
+        id: version
+        uses: ./
+
+      - name: Create Release ${{ steps.version.outputs.version }}
+        if: github.event_name == 'push'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: ${{ steps.version.outputs.version }}
