@@ -47,7 +47,7 @@ jobs:
           fetch-depth: 0
 
       - run: |
-          git tag -fa v1-test -m "Update v1 tag"
+          git tag -f v1-test
           git push -f origin v1-test
 
       - name: Version
