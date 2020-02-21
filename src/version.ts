@@ -72,7 +72,7 @@ export function success(version: string): void {
     core.info(`⚠️ could not split version, only version output set`)
     return
   }
-  core.info(`✅ split version major=${s[0]};minor=${s[1]};patch=${s[2]}`)
+  core.info(`✅ split version major=${s[0]} minor=${s[1]} patch=${s[2]}`)
   core.setOutput('major', s[0])
   core.setOutput('minor', s[1])
   core.setOutput('patch', s[2])
