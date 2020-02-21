@@ -980,12 +980,13 @@ function run() {
             const prepend = core.getInput('prepend');
             const cwd = process.env.GITHUB_WORKSPACE || process.cwd();
             const filePath = path.join(cwd, file);
-            const version = yield version_1.getVersion(filePath, prepend);
+            const rawVersion = yield version_1.getVersion(filePath);
+            const version = `${prepend}${rawVersion}`;
             core.info(`✅ found ${version} from ${file} file`);
             if (yield version_1.gitTagExists(version)) {
                 return version_1.fail(version, file);
             }
-            version_1.success(version);
+            version_1.success(version, rawVersion);
         }
         catch (error) {
             core.setFailed(`🔥 ${error.message}`);
@@ -1539,9 +1540,8 @@ const command_1 = __webpack_require__(431);
 /**
  * Extract the version from the given file
  * @param filePath The absolute path to the file
- * @param prepend Prepend this to the version
  */
-function getVersion(filePath, prepend = '') {
+function getVersion(filePath) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!(yield io_util_1.exists(filePath))) {
             throw new Error(`failed to find version file: ${filePath}`);
@@ -1551,7 +1551,7 @@ function getVersion(filePath, prepend = '') {
         if (lines.length <= 0 || lines[0] === '') {
             throw new Error(`failed to find version in ${filePath}`);
         }
-        return `${prepend}${lines[0]}`;
+        return lines[0];
     });
 }
 exports.getVersion = getVersion;
@@ -1591,11 +1591,12 @@ exports.fail = fail;
 /**
  * Everything is OK, report and set outputs
  * @param version The version found
+ * @param rawVersion The version without the prepended string
  */
-function success(version) {
+function success(version, rawVersion) {
     core.info(`✅ git tag ${version} is available`);
     core.setOutput('version', version);
-    const s = version.split('.');
+    const s = rawVersion.split('.');
     if (s.length !== 3) {
         core.info(`⚠️ could not split version, only version output set`);
         return;

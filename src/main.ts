@@ -10,13 +10,14 @@ async function run(): Promise<void> {
     const cwd = process.env.GITHUB_WORKSPACE || process.cwd()
     const filePath = path.join(cwd, file)
 
-    const version = await getVersion(filePath, prepend)
+    const rawVersion = await getVersion(filePath)
+    const version = `${prepend}${rawVersion}`
     core.info(`✅ found ${version} from ${file} file`)
 
     if (await gitTagExists(version)) {
       return fail(version, file)
     }
-    success(version)
+    success(version, rawVersion)
   } catch (error) {
     core.setFailed(`🔥 ${error.message}`)
   }

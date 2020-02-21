@@ -7,12 +7,8 @@ import {issueCommand} from '@actions/core/lib/command'
 /**
  * Extract the version from the given file
  * @param filePath The absolute path to the file
- * @param prepend Prepend this to the version
  */
-export async function getVersion(
-  filePath: string,
-  prepend: string = ''
-): Promise<string> {
+export async function getVersion(filePath: string): Promise<string> {
   if (!(await exists(filePath))) {
     throw new Error(`failed to find version file: ${filePath}`)
   }
@@ -22,7 +18,7 @@ export async function getVersion(
   if (lines.length <= 0 || lines[0] === '') {
     throw new Error(`failed to find version in ${filePath}`)
   }
-  return `${prepend}${lines[0]}`
+  return lines[0]
 }
 
 /**
@@ -62,12 +58,13 @@ export function fail(version: string, file: string): void {
 /**
  * Everything is OK, report and set outputs
  * @param version The version found
+ * @param rawVersion The version without the prepended string
  */
-export function success(version: string): void {
+export function success(version: string, rawVersion: string): void {
   core.info(`✅ git tag ${version} is available`)
   core.setOutput('version', version)
 
-  const s = version.split('.')
+  const s = rawVersion.split('.')
   if (s.length !== 3) {
     core.info(`⚠️ could not split version, only version output set`)
     return

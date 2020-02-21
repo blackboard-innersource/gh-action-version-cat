@@ -44,16 +44,15 @@ describe('version', () => {
   })
 
   it('find version in file', async () => {
-    const version = await getVersion(path.join(__dirname, 'version.txt'), 'v')
-    expect(version).toBe('v1.0.0')
+    const version = await getVersion(path.join(__dirname, 'version.txt'))
+    expect(version).toBe('1.0.0')
   })
 
   it('find version in multi-line file', async () => {
     const version = await getVersion(
-      path.join(__dirname, 'multi-line-version.txt'),
-      'v'
+      path.join(__dirname, 'multi-line-version.txt')
     )
-    expect(version).toBe('v1.0.0')
+    expect(version).toBe('1.0.0')
   })
 
   it('to error when file does not exist', async () => {
