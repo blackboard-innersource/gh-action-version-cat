@@ -985,8 +985,7 @@ function run() {
             if (yield version_1.gitTagExists(version)) {
                 return version_1.fail(version, file);
             }
-            core.info(`✅ git tag ${version} is available`);
-            core.setOutput('version', version);
+            version_1.success(version);
         }
         catch (error) {
             core.setFailed(`🔥 ${error.message}`);
@@ -1532,6 +1531,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(__webpack_require__(470));
 const io_util_1 = __webpack_require__(672);
 const fs = __importStar(__webpack_require__(747));
 const exec_1 = __webpack_require__(986);
@@ -1576,6 +1576,11 @@ function gitTagExists(version, cwd) {
     });
 }
 exports.gitTagExists = gitTagExists;
+/**
+ * Fail the action and report the problem
+ * @param version The version found
+ * @param file The version file
+ */
 function fail(version, file) {
     const properties = { file, line: '1', col: '0' };
     const message = 'This version already exists, please bump accordingly.';
@@ -1583,6 +1588,24 @@ function fail(version, file) {
     throw new Error(`git tag ${version} already exists!`);
 }
 exports.fail = fail;
+/**
+ * Everything is OK, report and set outputs
+ * @param version The version found
+ */
+function success(version) {
+    core.info(`✅ git tag ${version} is available`);
+    core.setOutput('version', version);
+    const s = version.split('.');
+    if (s.length !== 3) {
+        core.info(`⚠️ could not split version, only version output set`);
+        return;
+    }
+    core.info(`✅ split version major=${s[0]} minor=${s[1]} patch=${s[2]}`);
+    core.setOutput('major', s[0]);
+    core.setOutput('minor', s[1]);
+    core.setOutput('patch', s[2]);
+}
+exports.success = success;
 
 
 /***/ }),
