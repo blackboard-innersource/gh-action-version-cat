@@ -14,6 +14,12 @@ inputs:
 outputs:
   version:
     description: 'The version to be used for the next git tag'
+  major:
+    description: 'The major version'
+  minor:
+    description: 'The minor version'
+  patch:
+    description: 'The patch version'
 runs:
   using: 'node12'
   main: 'dist/index.js'

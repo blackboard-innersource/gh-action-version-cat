@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import {getVersion, gitTagExists, fail} from './version'
+import {getVersion, gitTagExists, fail, success} from './version'
 import * as path from 'path'
 
 async function run(): Promise<void> {
@@ -10,15 +10,14 @@ async function run(): Promise<void> {
     const cwd = process.env.GITHUB_WORKSPACE || process.cwd()
     const filePath = path.join(cwd, file)
 
-    const version = await getVersion(filePath, prepend)
+    const rawVersion = await getVersion(filePath)
+    const version = `${prepend}${rawVersion}`
     core.info(`✅ found ${version} from ${file} file`)
 
     if (await gitTagExists(version)) {
       return fail(version, file)
     }
-
-    core.info(`✅ git tag ${version} is available`)
-    core.setOutput('version', version)
+    success(version, rawVersion)
   } catch (error) {
     core.setFailed(`🔥 ${error.message}`)
   }
