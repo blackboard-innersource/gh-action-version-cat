@@ -40,16 +40,6 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          ref: v1.0.0
-          fetch-depth: 0
-
-      - run: |
-          git tag -f v1-test
-          git push -f origin v1-test
-
       - name: Version
         id: version
         uses: ./
@@ -62,3 +52,14 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.version }}
           release_name: ${{ steps.version.outputs.version }}
+
+      - name: Checkout ${{ steps.version.outputs.version }}
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.version.outputs.version }}
+          fetch-depth: 0
+
+      - name: Tag and Push v${{ steps.version.outputs.major }}
+        run: |
+          git tag -f v${{ steps.version.outputs.major }}
+          git push -f origin v${{ steps.version.outputs.major }}
