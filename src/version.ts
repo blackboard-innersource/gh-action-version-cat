@@ -5,8 +5,9 @@ import {exec} from '@actions/exec'
 import {issueCommand} from '@actions/core/lib/command'
 
 /**
- * Extract the version from the given file
- * @param filePath The absolute path to the file
+ * Extract the version from the given file.
+ *
+ * @param {string} filePath - The absolute path to the file.
  */
 export async function getVersion(filePath: string): Promise<string> {
   if (!(await exists(filePath))) {
@@ -22,9 +23,10 @@ export async function getVersion(filePath: string): Promise<string> {
 }
 
 /**
- * Determine if the tag exists or not
- * @param version The tag name
- * @param cwd Optional - current working directory
+ * Determine if the tag exists or not.
+ *
+ * @param {string} version - The tag name.
+ * @param {string} cwd - Optional - current working directory.
  */
 export async function gitTagExists(
   version: string,
@@ -44,9 +46,10 @@ export async function gitTagExists(
 }
 
 /**
- * Fail the action and report the problem
- * @param version The version found
- * @param file The version file
+ * Fail the action and report the problem.
+ *
+ * @param {string} version - The version found.
+ * @param {string} file - The version file.
  */
 export function fail(version: string, file: string): void {
   const properties = {file, line: '1', col: '0'}
@@ -56,9 +59,10 @@ export function fail(version: string, file: string): void {
 }
 
 /**
- * Everything is OK, report and set outputs
- * @param version The version found
- * @param rawVersion The version without the prepended string
+ * Everything is OK, report and set outputs.
+ *
+ * @param {string} version - The version found.
+ * @param {string} rawVersion - The version without the prepended string.
  */
 export function success(version: string, rawVersion: string): void {
   core.info(`✅ git tag ${version} is available`)

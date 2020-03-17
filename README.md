@@ -122,7 +122,7 @@ $ npm run build
 
 Run the tests:  
 ```bash
-$ npm test
+$ npm run test
 ```
 
 Update the distribution (required for releasing and testing workflow):

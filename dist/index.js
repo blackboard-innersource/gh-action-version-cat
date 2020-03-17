@@ -1010,17 +1010,24 @@ module.exports = require("assert");
 
 "use strict";
 
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const os = __webpack_require__(87);
+const os = __importStar(__webpack_require__(87));
 /**
  * Commands
  *
  * Command Format:
- *   ##[name key=value;key=value]message
+ *   ::name key=value,key=value::message
  *
  * Examples:
- *   ##[warning]This is the user warning message
- *   ##[set-secret name=mypassword]definitelyNotAPassword!
+ *   ::warning::This is the message
+ *   ::set-env name=MY_VAR::some value
  */
 function issueCommand(command, properties, message) {
     const cmd = new Command(command, properties, message);
@@ -1045,34 +1052,39 @@ class Command {
         let cmdStr = CMD_STRING + this.command;
         if (this.properties && Object.keys(this.properties).length > 0) {
             cmdStr += ' ';
+            let first = true;
             for (const key in this.properties) {
                 if (this.properties.hasOwnProperty(key)) {
                     const val = this.properties[key];
                     if (val) {
-                        // safely append the val - avoid blowing up when attempting to
-                        // call .replace() if message is not a string for some reason
-                        cmdStr += `${key}=${escape(`${val || ''}`)},`;
+                        if (first) {
+                            first = false;
+                        }
+                        else {
+                            cmdStr += ',';
+                        }
+                        cmdStr += `${key}=${escapeProperty(val)}`;
                     }
                 }
             }
         }
-        cmdStr += CMD_STRING;
-        // safely append the message - avoid blowing up when attempting to
-        // call .replace() if message is not a string for some reason
-        const message = `${this.message || ''}`;
-        cmdStr += escapeData(message);
+        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
         return cmdStr;
     }
 }
 function escapeData(s) {
-    return s.replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+    return (s || '')
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A');
 }
-function escape(s) {
-    return s
+function escapeProperty(s) {
+    return (s || '')
+        .replace(/%/g, '%25')
         .replace(/\r/g, '%0D')
         .replace(/\n/g, '%0A')
-        .replace(/]/g, '%5D')
-        .replace(/;/g, '%3B');
+        .replace(/:/g, '%3A')
+        .replace(/,/g, '%2C');
 }
 //# sourceMappingURL=command.js.map
 
@@ -1092,10 +1104,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const command_1 = __webpack_require__(431);
-const os = __webpack_require__(87);
-const path = __webpack_require__(622);
+const os = __importStar(__webpack_require__(87));
+const path = __importStar(__webpack_require__(622));
 /**
  * The code to exit an action
  */
@@ -1181,6 +1200,13 @@ exports.setFailed = setFailed;
 //-----------------------------------------------------------------------
 // Logging Commands
 //-----------------------------------------------------------------------
+/**
+ * Gets whether Actions Step Debug is on or not
+ */
+function isDebug() {
+    return process.env['RUNNER_DEBUG'] === '1';
+}
+exports.isDebug = isDebug;
 /**
  * Writes debug message to user log
  * @param message debug message
@@ -1538,8 +1564,9 @@ const fs = __importStar(__webpack_require__(747));
 const exec_1 = __webpack_require__(986);
 const command_1 = __webpack_require__(431);
 /**
- * Extract the version from the given file
- * @param filePath The absolute path to the file
+ * Extract the version from the given file.
+ *
+ * @param {string} filePath - The absolute path to the file.
  */
 function getVersion(filePath) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1556,9 +1583,10 @@ function getVersion(filePath) {
 }
 exports.getVersion = getVersion;
 /**
- * Determine if the tag exists or not
- * @param version The tag name
- * @param cwd Optional - current working directory
+ * Determine if the tag exists or not.
+ *
+ * @param {string} version - The tag name.
+ * @param {string} cwd - Optional - current working directory.
  */
 function gitTagExists(version, cwd) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -1577,9 +1605,10 @@ function gitTagExists(version, cwd) {
 }
 exports.gitTagExists = gitTagExists;
 /**
- * Fail the action and report the problem
- * @param version The version found
- * @param file The version file
+ * Fail the action and report the problem.
+ *
+ * @param {string} version - The version found.
+ * @param {string} file - The version file.
  */
 function fail(version, file) {
     const properties = { file, line: '1', col: '0' };
@@ -1589,9 +1618,10 @@ function fail(version, file) {
 }
 exports.fail = fail;
 /**
- * Everything is OK, report and set outputs
- * @param version The version found
- * @param rawVersion The version without the prepended string
+ * Everything is OK, report and set outputs.
+ *
+ * @param {string} version - The version found.
+ * @param {string} rawVersion - The version without the prepended string.
  */
 function success(version, rawVersion) {
     core.info(`✅ git tag ${version} is available`);
