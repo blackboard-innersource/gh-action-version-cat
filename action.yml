@@ -14,12 +14,19 @@ inputs:
 outputs:
   version:
     description: 'The version to be used for the next git tag'
+    value: ${{ steps.version.outputs.version }}
   major:
     description: 'The major version'
+    value: ${{ steps.version.outputs.major }}
   minor:
     description: 'The minor version'
+    value: ${{ steps.version.outputs.minor }}
   patch:
     description: 'The patch version'
+    value: ${{ steps.version.outputs.patch }}
 runs:
-  using: 'node12'
-  main: 'dist/index.js'
+  using: "composite"
+  steps:
+    - id: version
+      run: ${{ github.action_path }}/version.sh ${{ inputs.file }} ${{ inputs.prepend }}
+      shell: bash
