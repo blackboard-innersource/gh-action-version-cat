@@ -110,25 +110,10 @@ jobs:
 
 ## Developing
 
-Install the dependencies:
-```bash
-$ npm install
-```
+To run tests locally:
 
-Build the typescript:
-```bash
-$ npm run build
-```
-
-Run the tests:  
-```bash
-$ npm run test
-```
-
-Update the distribution (required for releasing and testing workflow):
-```bash
-$ npm run build && npm run pack
-$ git commit -a dist/index.js -m "Update dist"
+```shell script
+make
 ```
 
 ## License
