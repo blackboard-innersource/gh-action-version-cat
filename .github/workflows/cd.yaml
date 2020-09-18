@@ -15,9 +15,16 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./
+        id: version
         with:
-          file: __tests__/version.txt
+          file: test/fixtures/version.txt
           prepend: test
+      - name: Print outputs
+        run: |
+          echo ${{ steps.version.outputs.version }}
+          echo ${{ steps.version.outputs.major }}
+          echo ${{ steps.version.outputs.minor }}
+          echo ${{ steps.version.outputs.patch }}
 
   cd:
     name: Validate and Release
@@ -28,17 +35,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Test
-        run: |
-          npm install
-          npm run all
-
-      - name: Verify no changes
-        run: |
-          if ! git diff --quiet; then
-            git status --short
-            echo "::error::There should be no dirty files, likely need to run 'npm run build && npm run pack' to update the dist"
-            exit 1
-          fi
+        run: make
 
       - name: Version
         id: version
