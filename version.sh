@@ -35,9 +35,9 @@ version_major_minor_patch() {
   fi
 
   echo "✅ split version major=${PARTS[0]} minor=${PARTS[1]} patch=${PARTS[2]}"
-  echo "::set-output name=major::${PARTS[0]}"
-  echo "::set-output name=minor::${PARTS[1]}"
-  echo "::set-output name=patch::${PARTS[2]}"
+  echo "major=${PARTS[0]}" >> $GITHUB_OUTPUT
+  echo "minor=${PARTS[1]}" >> $GITHUB_OUTPUT
+  echo "patch=${PARTS[2]}" >> $GITHUB_OUTPUT
 }
 
 main() {
@@ -58,7 +58,7 @@ main() {
   fi
 
   echo "✅ git tag $VERSION is available"
-  echo "::set-output name=version::$VERSION"
+  echo "version=$VERSION" >> $GITHUB_OUTPUT
 
   version_major_minor_patch "$RAW_VERSION"
 }
