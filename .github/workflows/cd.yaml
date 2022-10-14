@@ -34,7 +34,7 @@ jobs:
 
   cd:
     name: Validate and Release
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
