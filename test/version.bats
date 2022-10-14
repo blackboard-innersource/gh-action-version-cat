@@ -4,6 +4,18 @@ load "version.sh"
 load "test_helper/bats-support/load"
 load "test_helper/bats-assert/load"
 
+GITHUB_OUTPUT=""
+
+function setup {
+  GITHUB_OUTPUT=$(mktemp)
+}
+
+function teardown {
+  if [ -f "$GITHUB_OUTPUT" ]; then
+    rm "$GITHUB_OUTPUT"
+  fi
+}
+
 @test "version_read should find version in file" {
   run version_read test/fixtures/version.txt
   assert_success
@@ -33,9 +45,13 @@ load "test_helper/bats-assert/load"
   assert_success
   assert_output - <<EOF
 ✅ split version major=1 minor=2 patch=3
-::set-output name=major::1
-::set-output name=minor::2
-::set-output name=patch::3
+EOF
+
+  run cat $GITHUB_OUTPUT
+  assert_output - <<EOF
+major=1
+minor=2
+patch=3
 EOF
 }
 
@@ -55,11 +71,15 @@ EOF
   assert_output - <<EOF
 ✅ found test1.0.0 from test/fixtures/version.txt file
 ✅ git tag test1.0.0 is available
-::set-output name=version::test1.0.0
 ✅ split version major=1 minor=0 patch=0
-::set-output name=major::1
-::set-output name=minor::0
-::set-output name=patch::0
+EOF
+
+  run cat $GITHUB_OUTPUT
+  assert_output - <<EOF
+version=test1.0.0
+major=1
+minor=0
+patch=0
 EOF
 }
 
